@@ -1,0 +1,19 @@
+.icon {
+	display: inline-block;
+	margin: 2px;
+	height: 16px;
+	width: 16px;
+	background-color: #ccc;
+}
+
+/* ICONS */
+.icon-ELEVEN {
+	background: url('../examples/images/7-Eleven.png') center center no-repeat;
+}
+.icon-library {
+	background: url('../examples/images/library-71.png') center center no-repeat;
+}
+.icon-starbucks {
+	background: url('../examples/images/starbucks.png') center center no-repeat;
+}
+
