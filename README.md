@@ -1,176 +1,127 @@
-#word-overlap
+Leaflet Panel 
+==============
 
-[![NPM version](https://badge.fury.io/js/word-overlap.svg)](http://badge.fury.io/js/word-overlap) [![Build Status](https://travis-ci.org/sayanee/word-overlap.svg?branch=master)](https://travis-ci.org/sayanee/word-overlap) [![Coverage Status](https://img.shields.io/coveralls/sayanee/word-overlap.svg)](https://coveralls.io/r/sayanee/word-overlap) [![Code Climate](https://codeclimate.com/github/sayanee/word-overlap/badges/gpa.svg)](https://codeclimate.com/github/sayanee/word-overlap) [![Dependency Status](https://gemnasium.com/sayanee/word-overlap.svg)](https://gemnasium.com/sayanee/word-overlap)
+Leaflet Control Layers extended with support groups,marker,filter and icons
 
-> Check the number of words overlapping between 2 phrases or sentences
+Copyright [Kenneth Hu](http://www.kennethhu.net/)
 
-Used in cases to check whether 2 titles / sentences / phrases are referring to the same context. E.g. 2 event names.
+Tested in Leaflet 0.7.3
 
+**demo:**
+[www.kennethhu.net/maps/leaflet-panel](http://www.kennethhu.net/map/examples/leaflet_panel.html)
 
-##Install
-
-1. with [npm](https://www.npmjs.org/)
-
-	```js
-	npm install word-overlap
-	```
-- with [browserify](http://browserify.org/)
-	1. in file `main.js`
-
-		```js
-		// in main.js
-		var overlap = require('word-overlap');
-
-		var sentence1 = 'The Hitchhikings Meetup in Betelgeuse by Ford Prefect';
-		var sentence2 = 'The hitchhikings meetups by the hitchhikers';
-
-		var reply = overlap(sentence1, sentence2, {
-		  ignoreCase: true,
-		  minWordLength: 2,
-		  ignoreCommonWords: true
-		});
-
-		console.log(reply);
-		```
-	- in file `index.html`
-
-		```html
-		<script src="build.js"></script>
-		```
-	- make the file `build.js`
-
-		```shell
-		browserify main.js -o build.js --exclude WNdb --exclude lapack
-		```
+**Source code:**  
+[Github](https://github.com/kennethhutw/leaflet-panel)   
 
 
+![Image](https://raw.githubusercontent.com/kennethhutw/leaflet-panel/master/leaflet-panel.png)
 
-##Usage
+#Usage
 
-```js
-var overlap = require('word-overlap');
-
-var sentence1 = 'The Hitchhikings Meetup in Betelgeuse by Ford Prefect';
-var sentence2 = 'The hitchhikings meetups by the hitchhikers';
+**Multiple active layers with icons**
+```javascript
+var baseLayers = [
+	{
+		active: true,
+		name: "OpenStreetMap",
+		layer: L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+	}
+];
+var overLayers = [
+	{
+		name: "Drinking Water",
+		icon: '<i class="icon icon-water"></i>',
+		layer: L.geoJson(WaterGeoJSON)
+	},
+	{
+		active: true,
+		name: "Parking",
+		icon: '<i class="icon icon-parking"></i>',
+		layer: L.geoJson(ParkingGeoJSON)
+	}	
+];
+map.addControl( new L.Control.PanelLayers(baseLayers, overLayers) );
 ```
 
-###simple case
-
-```js
-overlap(sentence1, sentence2);
-// [ 'The', 'by' ]
+**Build panel layers from pure JSON Config**
+```javascript
+var panelJsonConfig = {
+    "baselayers": [
+        {
+            "active": true,
+            "name": "Open Cycle Map",
+            "layer": {
+                "type": "tileLayer",
+                "args": [
+                    "http://{s}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png"
+                ]
+            }
+        },
+        {
+            "name": "Landscape",
+            "layer": {
+                "type": "tileLayer",
+                "args": [
+                    "http://{s}.tile3.opencyclemap.org/landscape/{z}/{x}/{y}.png"
+                ]
+            }
+        },        
+        {
+            "name": "Transports",
+            "layer": {
+                "type": "tileLayer",
+                "args": [
+                    "http://{s}.tile2.opencyclemap.org/transport/{z}/{x}/{y}.png"
+                ]
+            }
+        }
+    ],
+    "overlayers": [
+        {
+            "name": "Terrain",
+            "layer": {
+            "type": "tileLayer",
+            "args": [
+                "http://toolserver.org/~cmarqu/hill/{z}/{x}/{y}.png", {
+                "opacity": 0.5
+                }
+            ]
+            }
+        }
+    ]
+};
+L.control.panelLayers(panelJsonConfig.baseLayers, panelJsonConfig.overLayers).addTo(map);
 ```
 
-###option: ignore case
-
-```js
-overlap(sentence1, sentence2, {
-   ignoreCase: true
-});
-// [ 'the', 'hitchhikings', 'by' ]
+**Grouping of layers**
+```javascript
+L.control.panelLayers([
+	{
+		name: "Open Street Map",
+		layer: osmLayer
+	},
+	{
+		group: "Walking layers",
+		layers: [
+			{
+				name: "Open Cycle Map",
+				layer: L.tileLayer('http://{s}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png')
+			},
+			{
+				name: "Hiking",
+				layer: L.tileLayer("http://toolserver.org/tiles/hikebike/{z}/{x}/{y}.png")
+			}			
+		]
+	},
+	{
+		group: "Road layers",
+		layers: [
+			{
+				name: "Transports",
+				layer: L.tileLayer("http://{s}.tile2.opencyclemap.org/transport/{z}/{x}/{y}.png")
+			}
+		]
+	}	
+]).addTo(map);
 ```
 
-###option: min word length
-
-```js
-overlap(sentence1, sentence2, {
-  ignoreCase: true,
-  minWordLength: 2
-});
-// [ 'the', 'hitchhiking', 'by' ]
-```
-
-###option: ignore default common words
-
-Common words by default include: *a, an, the, this, that, there, it, in, on, for, not, your, you, at,
-to, is, us, out, by, I*
-
-```js
-overlap(sentence1, sentence2, {
-  ignoreCase: true,
-  minWordLength: 2,
-  ignoreCommonWords: true
-});
-// [ 'hitchhikings' ]
-```
-
-###option: ignore number
-
-Ignore numbers such as: 5e3, 0xff, -1.1, 0, 1, 1.1, 10, 10.10, 100, '-1.1', etc.
-
-```js
-sentence1 = 'Welcome to 2015';
-sentence2 = '2015 Meetup for the year';
-console.log(overlap(sentence1, sentence2, {
-  ignoreNumber: true
-}));
-// [ ]
-```
-
-###option: add your common words to ignore
-
-```js
-overlap(sentence1, sentence2, {
-  ignoreCase: true,
-  minWordLength: 2,
-  ignoreCommonWords: true,
-  common: [ 'hitchhikings' ]
-});
-// [ ]
-```
-
-###option: depluralize words
-
-```js
-overlap(sentence1, sentence2, {
-  ignoreCase: true,
-  minWordLength: 2,
-  ignoreCommonWords: true,
-  depluralize: true
-});
-// [ 'hitchhiking', 'meetup' ]
-```
-
-###option: depluralize words with plurals to ignore
-
-```js
-overlap(sentence1, sentence2, {
-  ignoreCase: true,
-  minWordLength: 2,
-  ignoreCommonWords: true,
-  depluralize: true,
-  ignorePlurals: [ 'hitchhikings' ]
-});
-// [ 'hitchhikings', 'meetup' ]
-```
-
-###option: stemming
-
-```js
-var sentence1 = 'A programming course in SmallTalk';
-var sentence2 = 'Have you programmed in SmallTalk?';
-
-overlap(sentence1, sentence2, {
-  stemming: true,
-  ignoreCommonWords: true
-});
-// [ 'program', 'smalltalk' ]
-```
-
-Try out the examples in file `example.js` with the command `node example.js`
-
-##Contribute
-
-Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) for details.
-
-##Versioning
-
-This repository follows the [Semantic Versioning](http://semver.org/) guidelines:
-
-1. For **patches**, run `grunt bump`
-- For **minor release**, run `grunt bump:minor`
-- For **major release**, run `grunt bump:major`
-
-##License
-
-(C) Sayanee Basu 2014, released under an MIT license
